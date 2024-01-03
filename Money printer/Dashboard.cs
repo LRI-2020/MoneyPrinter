@@ -30,7 +30,10 @@ public class Dashboard
             2. Display Bank Accounts
             3. Create Client
             4. Create Account
-            5. Exit
+            5. Deposit
+            6. Withdrawal
+            7. Check balance for an account
+            8. Exit
         ");
     }
 
@@ -40,17 +43,33 @@ public class Dashboard
         {
             case 1:
                 DisplayClient();
+                Start();
                 break;
             case 2:
                 DisplayAccounts();
+                Start();
                 break;
             case 3:
                 NewClient();
+                Start();
                 break;
             case 4:
                 NewAccount();
+                Start();
                 break;
             case 5:
+                StartDeposit();
+                Start();
+                break;
+            case 6:
+                StartWithdrawal();
+                Start();
+                break;
+            case 7:
+                CheckBalance();
+                Start();
+                break;
+            case 8:
                 Console.WriteLine("Bye ...");
                 break;
             default:
@@ -58,6 +77,73 @@ public class Dashboard
                 Start();
                 break;
         }
+    }
+
+    private void CheckBalance()
+    {
+        var accountId = AskAccountId();
+        DisplayBalance(accountId);
+    }
+
+    private void DisplayBalance(int accountId)
+    {
+        var balance = AccountManager.GetBalance(accountId);
+        Console.WriteLine("The balance of the account {0} is {1}", accountId, balance);
+    }
+
+    private void StartWithdrawal()
+    {
+        var accountId = AskAccountId();
+        var amount = AskAmount();
+        var res = AccountManager.Withdrawal(accountId, amount);
+        if(!res)
+            Console.WriteLine("Withdrawal could not be performed");
+        DisplayBalance(accountId);
+        
+    }
+
+    private void StartDeposit()
+    {
+        var accountId = AskAccountId();
+        var amount = AskAmount();
+        var res = AccountManager.Deposit(accountId, amount);
+        if(!res)
+            Console.WriteLine("Deposit could not be performed");
+        DisplayBalance(accountId);
+    }
+
+    private double AskAmount()
+    {
+        bool isDouble;
+        double amount;
+        do
+        {
+            Console.WriteLine("Enter the amount of the transaction : ");
+            var inputDeposit = Console.ReadLine();
+            isDouble = double.TryParse(inputDeposit, out amount);
+        } while (!isDouble || amount <= 0 || amount > 100000000000);
+
+        return amount;
+    }
+
+    private int AskAccountId()
+    {
+        var inputId = "";
+        do
+        {
+            Console.WriteLine("Enter the id of the account : ");
+            inputId = Console.ReadLine();
+        } while (!IsValidAccountId(inputId));
+
+        return int.Parse(inputId);
+    }
+
+    private bool IsValidAccountId(string? inputId)
+    {
+        var res = false;
+        if (inputId != null && int.TryParse(inputId, out var id))
+            res = AccountRepo.Accounts.Exists(a => a.Id == id);
+        return res;
     }
 
     private void DisplayClient()
@@ -68,7 +154,6 @@ public class Dashboard
         clients.ForEach(c => { Printer.PrintRow(c.Id.ToString(), c.Name, c.DateJoined.ToShortDateString(), "", ""); });
         Printer.PrintLine();
         Console.ReadLine();
-        Start();
     }
 
     private void DisplayAccounts()
@@ -83,7 +168,6 @@ public class Dashboard
         });
         Printer.PrintLine();
         Console.ReadLine();
-        Start();
     }
 
     private string GetClientName(int clientId)
